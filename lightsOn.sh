@@ -48,12 +48,35 @@ else
     screensaver=`pgrep -l kscreensaver | grep -wc kscreensaver`
     if [ $screensaver -ge 1 ]; then
         screensaver=kscreensaver
+    elif [ `pgrep -l mate-screensav | grep -wc mate-screensave` -ge 1 ];then
+        screensaver=mate-screensaver
     else
         screensaver=None
-        echo "No screensaver detected" 
-    fi       
+        echo "No screensaver detected"
+    fi
 fi
 
+enableMateScreensaver()
+{
+   ## Check mate-screensaver blocker is runing:
+   mate_scrnsvr_blocker_pid=`ps -AF |grep "mate-screensaver-command -i" |grep -v grep |awk '{print $2}'`
+   if [ "x$mate_scrnsvr_blocker_pid" != "x" ];then
+       kill -s TERM $mate_scrnsvr_blocker_pid > /dev/null ## kill blocker
+   fi
+}
+
+disableMateScreensaver()
+{
+   ## This two commands not working (
+   #mate-screensaver-command -p #> /dev/null
+   #mate-screensaver-command -d #> /dev/null
+   ## But this work perfectly:
+   ## Check mate-screensaver blocker is runing:
+   mate_scrnsvr_blocker_pid=`ps -AF |grep "mate-screensaver-command -i" |grep -v grep |awk '{print $2}'`
+   if [ "x$mate_scrnsvr_blocker_pid" = "x" ];then
+    	mate-screensaver-command -i & > /dev/null ## If blocker not running, run it.
+   fi
+}
 
 checkFullscreen()
 {
@@ -71,7 +94,7 @@ checkFullscreen()
         #if [ "$activ_win_id" = "0x0" ]; then
         #     continue
         #fi
-        
+
         # Check if Active Window (the foremost window) is in fullscreen state
         isActivWinFullscreen=`DISPLAY=:0.${display} xprop -id $activ_win_id | grep _NET_WM_STATE_FULLSCREEN`
             if [[ "$isActivWinFullscreen" = *NET_WM_STATE_FULLSCREEN* ]];then
@@ -80,20 +103,22 @@ checkFullscreen()
                 if [[ $var -eq 1 ]];then
                     delayScreensaver
                 fi
+            else ##KRI if no Active Window in fullscreen state found
+            	enableMateScreensaver
             fi
     done
 }
 
 
 
-    
+
 
 # check if active windows is mplayer, vlc or firefox
-#TODO only window name in the variable activ_win_id, not whole line. 
+#TODO only window name in the variable activ_win_id, not whole line.
 #Then change IFs to detect more specifically the apps "<vlc>" and if process name exist
 
 isAppRunning()
-{    
+{
     #Get title of active window
     activ_win_title=`xprop -id $activ_win_id | grep "WM_CLASS(STRING)"`   # I used WM_NAME(STRING) before, WM_CLASS more accurate.
 
@@ -112,10 +137,10 @@ isAppRunning()
         fi
     fi
 
-    
+
     # Check if user want to detect Video fullscreen on Chromium, modify variable chromium_flash_detection if you dont want Chromium detection
     if [ $chromium_flash_detection == 1 ];then
-        if [[ "$activ_win_title" = *exe* ]];then   
+        if [[ "$activ_win_title" = *exe* ]];then
         # Check if Chromium Flash process is running
             flash_process=`pgrep -lfc "chromium-browser --type=plugin --plugin-path=/usr/lib/adobe-flashplugin"`
             if [[ $flash_process -ge 1 ]];then
@@ -124,9 +149,9 @@ isAppRunning()
         fi
     fi
 
-    
+
     #check if user want to detect mplayer fullscreen, modify variable mplayer_detection
-    if [ $mplayer_detection == 1 ];then  
+    if [ $mplayer_detection == 1 ];then
         if [[ "$activ_win_title" = *mplayer* || "$activ_win_title" = *MPlayer* ]];then
             #check if mplayer is running.
             #mplayer_process=`pgrep -l mplayer | grep -wc mplayer`
@@ -136,10 +161,10 @@ isAppRunning()
             fi
         fi
     fi
-    
-    
+
+
     # Check if user want to detect vlc fullscreen, modify variable vlc_detection
-    if [ $vlc_detection == 1 ];then  
+    if [ $vlc_detection == 1 ];then
         if [[ "$activ_win_title" = *vlc* ]];then
             #check if vlc is running.
             #vlc_process=`pgrep -l vlc | grep -wc vlc`
@@ -148,8 +173,8 @@ isAppRunning()
                 return 1
             fi
         fi
-    fi    
-    
+    fi
+
 
 return 0
 }
@@ -163,16 +188,19 @@ delayScreensaver()
     	xscreensaver-command -deactivate > /dev/null
     elif [ "$screensaver" == "kscreensaver" ]; then
     	qdbus org.freedesktop.ScreenSaver /ScreenSaver SimulateUserActivity > /dev/null
+    ##KRI
+    elif [ "$screensaver" == "mate-screensaver" ]; then
+        disableMateScreensaver
     fi
 
 
-    #Check if DPMS is on. If it is, deactivate and reactivate again. If it is not, do nothing.    
+    #Check if DPMS is on. If it is, deactivate and reactivate again. If it is not, do nothing.
     dpmsStatus=`xset -q | grep -ce 'DPMS is Enabled'`
     if [ $dpmsStatus == 1 ];then
         	xset -dpms
         	xset dpms
 	fi
-	
+
 }
 
 
@@ -202,4 +230,4 @@ do
 done
 
 
-exit 0    
+exit 0
