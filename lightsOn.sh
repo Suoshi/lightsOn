@@ -28,6 +28,9 @@ mplayer_detection=0
 vlc_detection=0
 firefox_flash_detection=1
 chromium_flash_detection=1
+# There are several paths to flash plugin. For example it's "/usr/lib/flashplugin-installer" in Linux Mint 13.
+chromium_flashplugin_path="/usr/lib/flashplugin-installer"
+#chromium_flashplugin_path="/usr/lib/adobe-flashplugin"
 
 
 # YOU SHOULD NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
@@ -142,7 +145,7 @@ isAppRunning()
     if [ $chromium_flash_detection == 1 ];then
         if [[ "$activ_win_title" = *exe* ]];then
         # Check if Chromium Flash process is running
-            flash_process=`pgrep -lfc "chromium-browser --type=plugin --plugin-path=/usr/lib/adobe-flashplugin"`
+            flash_process=`pgrep -lfc "chromium-browser --type=plugin --plugin-path=$chromium_flashplugin_path"`
             if [[ $flash_process -ge 1 ]];then
                 return 1
             fi
