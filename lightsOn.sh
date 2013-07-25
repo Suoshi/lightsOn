@@ -112,7 +112,7 @@ checkFullscreen()
                 if [[ $var -eq 1 ]];then
                     delayScreensaver
                 fi
-            else ##KRI if no Active Window in fullscreen state found
+            else ## if no Active Window in fullscreen state found
             	enableMateScreensaver
             fi
     done
@@ -200,7 +200,6 @@ delayScreensaver()
     	xscreensaver-command -deactivate > /dev/null
     elif [ "$screensaver" == "kscreensaver" ]; then
     	qdbus org.freedesktop.ScreenSaver /ScreenSaver SimulateUserActivity > /dev/null
-    ##KRI
     elif [ "$screensaver" == "mate-screensaver" ]; then
         disableMateScreensaver
     fi
