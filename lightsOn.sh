@@ -43,7 +43,7 @@ do
     displays="$displays $id"
 done< <(xvinfo | sed -n 's/^screen #\([0-9]\+\)$/\1/p')
 
-# Detect screensaver been used (xscreensaver, kscreensaver or none)
+# Detect screensaver been used (xscreensaver, kscreensaver, mate-screensaver or none)
 screensaver=`pgrep -l xscreensaver | grep -wc xscreensaver`
 if [ $screensaver -ge 1 ]; then
     screensaver=xscreensaver
@@ -51,11 +51,14 @@ else
     screensaver=`pgrep -l kscreensaver | grep -wc kscreensaver`
     if [ $screensaver -ge 1 ]; then
         screensaver=kscreensaver
-    elif [ `pgrep -l mate-screensav | grep -wc mate-screensave` -ge 1 ];then
-        screensaver=mate-screensaver
     else
-        screensaver=None
-        echo "No screensaver detected"
+        screensaver=`pgrep -l mate-screensav | grep -wc mate-screensave`
+        if [ $screensaver -ge 1 ]; then
+            screensaver=mate-screensaver
+        else
+            screensaver=None
+            echo "No screensaver detected"
+        fi
     fi
 fi
 
